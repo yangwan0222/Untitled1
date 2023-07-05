@@ -276,5 +276,3 @@ d2 <- merge(d2,d, by = c("RID","EXAMDATE"),all.x = TRUE)
 library(usethis)
 use_git_config(user.name = "yangwan0221", user.email = "yangwan0221@gmail.com")
 git_vaccinate()
-
-print("abc")
