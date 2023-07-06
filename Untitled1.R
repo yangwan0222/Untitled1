@@ -276,3 +276,20 @@ d2 <- merge(d2,d, by = c("RID","EXAMDATE"),all.x = TRUE)
 library(usethis)
 use_git_config(user.name = "yangwan0221", user.email = "yangwan0221@gmail.com")
 git_vaccinate()
+
+#############################
+
+d1 <- read.csv("C://Users//wanya//Desktop//Cruchaga_lab//Cruchaga_lab_ADNI_CSF_idlookup_SOMAscan_20_06_2023.csv")
+d2 <- read.csv("C://Users//wanya//Desktop//Cruchaga_lab//Cruchaga_lab_ADNI_CSF_SOMAscan7k_Protein_matrix_postQC_20_06_2023.csv")
+d3 <- inventory
+
+d <- read.csv("C://Users//wanya//Downloads//results (3).csv")
+names(d) <- c("GUSPECID","RID","EXAMDATE")
+d$EXAMDATE <- dmy(d$EXAMDATE)
+
+d1 <- merge(d1,d,by = "GUSPECID")
+d3 <- d3[d3$EVENT == "CSF",]
+d3 <- d3[,c(1,4,8)]
+d3$EXAMDATE <- mdy(d3$EXAMDATE)
+
+d4 <- merge(d1,d3,by = c("RID","EXAMDATE"),all.x = TRUE)
