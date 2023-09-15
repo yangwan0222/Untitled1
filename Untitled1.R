@@ -1,3 +1,9 @@
+######## ADNIMERGE FIX
+library(ADNIMERGE)
+inventory %>% mutate(EXAMDATE = case_when(RID == 2357 & VISCODE2 == 'bl' & EVENT == "CSF" ~ '05/10/2011',TRUE ~ EXAMDATE))
+inventory %>% mutate(EXAMDATE = case_when(RID == 6606 & VISCODE2 == 'bl' & EVENT == "CSF" ~ '01/16/2019',TRUE ~ EXAMDATE))
+
+########
 install.packages("swirl")
 library(swirl)
 install_course("The R Programming Environment")
@@ -293,3 +299,381 @@ d3 <- d3[,c(1,4,8)]
 d3$EXAMDATE <- mdy(d3$EXAMDATE)
 
 d4 <- merge(d1,d3,by = c("RID","EXAMDATE"),all.x = TRUE)
+
+#############################
+
+d1 <- data.frame(read_excel("C://Users//wanya//Desktop//emory//emory - shipping manifest.xls"))
+d <- read.csv("C://Users//wanya//Desktop//temp//DXSUM_PDXCONV_ADNIALL_11Jul2023.csv")[,c("Phase","RID","VISCODE","EXAMDATE","USERDATE","DXCURREN","DXCHANGE","DIAGNOSIS")]
+d$DXCURREN[is.na(d$DXCURREN)] = d$DXCHANGE[is.na(d$DXCURREN)]
+d$DXCURREN[is.na(d$DXCURREN)] = d$DIAGNOSIS[is.na(d$DXCURREN)]
+library(Epi)
+d$DX <- Relevel(factor(d$DXCURREN), list(NL=c(1,7,9), MCI=c(2,4,8), AD=c(3,5,6), EMCI=0))
+d$DODX <- d$DATE
+d$EXAMDATE <- ymd(d$EXAMDATE)
+d <- d[,c(2,4,9)]
+d$DX <- as.character(d$DX)
+
+d2 <- read.csv("C://Users//wanya//Desktop//temp//results (4).csv")
+d2$Collection.Date <- dmy(d2$Collection.Date)
+
+d1 <- merge(d1,d2,by = "Global.Specimen.ID")
+d1 <- d1[,c(6,7)]
+
+names(d1)[1] <- "RID"
+names(d1)[2] <- "EXAMDATE"
+
+d3 <- merge(d1,d,by = c("RID","EXAMDATE"),all.x = TRUE)
+
+for(i in 1:nrow(d3))
+{
+  if(!is.na(d3[i,3]))
+  {
+    next
+  } else
+  {
+    t <- d[d$RID==d3[i,1],]
+    t$diff <- abs(t$EXAMDATE - d3[i,2])
+    t <- t[!is.na(t$EXAMDATE),]
+    if(min(t$diff)<90)
+    {
+      d3[i,3] <- t[t$diff==min(t$diff),]$DX[1]
+    } else
+    {
+      d3[i,3] <- NA
+    }
+  }
+}
+
+#############################
+
+d <- read.csv("C://Users//wanya//Desktop//unblind//emory//EMORY_PEPTIDERATIOS_SET2.csv")
+d$id <- 1:nrow(d)
+d1 <- read.csv("C://Users//wanya//Downloads//results (4).csv")
+names(d1) <- c("LINK_ID","RID","EXAMDATE","VOL_ML")
+d1$EXAMDATE <- dmy(d1$EXAMDATE)
+
+d <- merge(d,d1,by = "LINK_ID",all.x = TRUE)
+
+library(ADNIMERGE)
+d2 <- force(inventory)
+d2 <- d2[,c(1,4,7,8)]
+d2 <- d2[d2$EVENT == "CSF",]
+d2$EXAMDATE <- mdy(d2$EXAMDATE)
+
+d <- d[,c(1,6:15,17:20)]
+names(d)[13] <- "RID"
+names(d)[14] <- "EXAMDATE"
+names(d)[15] <- "VOL_ML"
+
+d <- merge(d,d2,by = c("RID","EXAMDATE"), all.x = TRUE)
+d <- d[,-c(17)]
+
+t <- unique(d[is.na(d$VISCODE2),]$LINK_ID)
+for(i in 1:length(t))
+{
+  t1 <- d1[d1$LINK_ID == t[i],]
+  if(nrow(t1)==0)
+  {
+    next
+  }
+  
+  t2 <- d2[d2$RID == t1$RID,]
+  t2$diff <- abs(t2$EXAMDATE - t1$EXAMDATE)
+  t2 <- t2[!is.na(t2$diff),]
+  if(min(t2$diff)<180)
+  {
+    d[d$LINK_ID==t1$LINK_ID,]$VISCODE2 <- t2[t2$diff == min(t2$diff),]$VISCODE2
+  }
+}
+
+for(i in 1:40)
+{
+  t1 <- d1[d1$LINK_ID == t[i],]
+  print(i)
+  print(t1)
+  print(d2[d2$RID == t1$RID,])
+  
+}
+
+d[d$LINK_ID=="BA80N5BT-02",]$VISCODE2 <- "bl"
+
+#############################
+
+d1 <- read.csv("C://Users//wanya//Desktop//Cruchaga_lab//Cruchaga_lab_ADNI_CSF_idlookup_Metabolon_20_06_2023_unblind.csv")
+d1$id <- 1:nrow(d1)
+d3 <- inventory
+
+d <- read.csv("C://Users//wanya//Downloads//results (3).csv")
+names(d) <- c("GUSPECID","RID","EXAMDATE")
+d$EXAMDATE <- dmy(d$EXAMDATE)
+
+d1 <- merge(d1,d,by = "GUSPECID")
+d3 <- d3[d3$EVENT == "CSF",]
+d3 <- d3[,c(1,4,8)]
+d3$EXAMDATE <- mdy(d3$EXAMDATE)
+
+d4 <- unique(merge(d1,d3,by = c("RID","EXAMDATE"),all.x = TRUE))
+
+t <- d4[is.na(d4$VISCODE2),]
+for(i in 1:nrow(t))
+{
+  t1 <- d3[d3$RID == t[i,1],]
+  if(nrow(t1)==0)
+  {
+    next
+  } else
+  {
+    t1$diff <- abs(t1$EXAMDATE-t$EXAMDATE[i])
+    if(min(t1$diff)<90)
+    {
+      d4[d4$Somalogic_Barcode_A==t[i,4],]$VISCODE2 <- t1[t1$diff == min(t1$diff),]$VISCODE2
+    }
+  }
+}
+
+write.csv(d1,"C://Users//wanya//Desktop//Cruchaga_lab//Cruchaga_lab_ADNI_CSF_metabolomic_matrix_20_06_2023_unblind.csv")
+
+d5 <- read.csv("C://Users//wanya//Desktop//Cruchaga_lab//Cruchaga_lab_ADNI_CSF_SOMAscan7k_Protein_matrix_postQC_20_06_2023.csv")
+
+dx <- merge(d4,d5,by="Somalogic_Barcode_A")
+
+#############################
+
+d <- read.csv("C://Users//wanya//Downloads//Biomarker Samples_vertical.csv")[,c("site.id","subject.code","ts_last_modify")]
+d <- unique(d)
+
+d1 <- read.csv("C://Users//wanya//Downloads//results (7).csv")
+
+d_edc <- data.frame(table(d$subject.code))
+d_ldms <- data.frame(table(d1$ID1))
+d_ldms <- d_ldms[-c(1),]
+
+d_edc$Var1 <- as.character(d_edc$Var1)
+d_edc$Var2 <- as.integer(substr(d_edc$Var1,nchar(d_edc$Var1)-3,nchar(d_edc$Var1)))
+
+names(d_edc) <- c("PTID","edc_freq","Var1")
+names(d_ldms)[2] <- "ldms_freq"
+
+d2 <- merge(d_ldms,d_edc,by = "Var1", all.x = TRUE)
+d2 <- d2[is.na(d2$edc_freq) | d2$ldms_freq > d2$edc_freq,]
+write.csv(d2,"C://Users//wanya//Desktop//temp//PTIDlist.csv")
+
+d3 <- merge(d_edc,d_ldms,by = "Var1", all.x = TRUE)
+d3 <- d3[is.na(d3$ldms_freq) | d3$edc_freq > d3$ldms_freq,]
+
+#############################
+
+d <- read.csv("C://Users//wanya//Desktop//unblind//ADMC//ADMC Leiden Oxylipins Baseline Metabolites_HighConfidence_lph ADNIGO2 .csv")
+d$Sample.Name <- substr(d$Sample.Name,nchar(d$Sample.Name)-10,nchar(d$Sample.Name))
+d$id <- 1:nrow(d)
+
+d1 <- read.csv("C://Users//wanya//Downloads//results (9).csv")
+d1$Collection.Date <- dmy(d1$Collection.Date)
+names(d1) <- c("RID", "Sample.Name", "EXAMDATE")
+
+d <- merge(d,d1,by = "Sample.Name", all.x = TRUE)
+
+d2 <- force(inventory)
+d2 <- d2[d2$EVENT == "Blood",]
+d2$EXAMDATE <- mdy(d2$EXAMDATE)
+d2 <- d2[,c(1,4,8)]
+
+d <- merge(d,d2,by = c("RID","EXAMDATE"),all.x = TRUE)
+t <- d[is.na(d$VISCODE2),]
+
+for(i in 1:nrow(t))
+{
+  if(t$Sample.Name[i]=="Background" | t$Sample.Name[i]=="RSDQC")
+  {
+    next
+  }
+  t1 <- d2[d2$RID==t$RID[i],]
+  if(nrow(t1)==0)
+  {
+    next
+  }
+  t1$diff <- abs(t1$EXAMDATE - t$EXAMDATE[i])
+  if(min(t1$diff)<=90)
+  {
+    d$VISCODE2[d$RID==t$RID[i] & d$EXAMDATE==t$EXAMDATE[i]] <- t1[t1$diff == min(t1$diff),]$VISCODE2[1]
+  } else
+  {
+    d[d$RID==t$RID[i] & d$EXAMDATE==t$EXAMDATE[i],][1,63] <- NA
+  }
+}
+
+d1$FLDNAME[!d1$FLDNAME%in% names(d2)]
+d <- d1[!d1$FLDNAME%in%d1$FLDNAME[!d1$FLDNAME%in% names(d2)],]
+
+d1 <- read.csv("C://Users//wanya//Desktop//unblind//ADMC//ADMC Leiden Oxylipins Baseline Metabolites_WithCaution_lph ADNIGO2_dictionary.csv")
+d1$Sample.Name <- substr(d1$Sample.Name,nchar(d1$Sample.Name)-10,nchar(d1$Sample.Name))
+d2 <- read.csv("C://Users//wanya//Desktop//unblind//ADMC//ADMC Leiden Oxylipins Baseline Metabolites_WithCaution_lph ADNIGO2_unblind.csv")
+
+#############################
+
+d <- read.csv("C://Users//wanya//Desktop//unblind//ADMC//ADMC Leiden Oxylipins Baseline Data Dictionary ADNIGO2 .csv")
+d <- na.omit(d)
+
+d1 <- read.csv("C://Users//wanya//Desktop//unblind//ADMC//ADMC Leiden Oxylipins Baseline Metabolites_HighConfidence_hph ADNIGO2_dictionary.csv")
+d2 <- read.csv("C://Users//wanya//Desktop//unblind//ADMC//ADMC Leiden Oxylipins Baseline Metabolites_HighConfidence_lph ADNIGO2_dictionary.csv")
+d3 <- read.csv("C://Users//wanya//Desktop//unblind//ADMC//ADMC Leiden Oxylipins Baseline Metabolites_WithCaution_hph ADNIGO2_dictionary.csv")
+d4 <- read.csv("C://Users//wanya//Desktop//unblind//ADMC//ADMC Leiden Oxylipins Baseline Metabolites_WithCaution_lph ADNIGO2_dictionary.csv")
+
+#############################
+
+d <- data.frame(read_excel("C://Users//wanya//Desktop//Autopsy//autopsy3//temp.xlsx"))
+d$o <- 1:nrow(d)
+
+for (i in seq(nrow(d)))
+{
+  d$gid[i] <- paste(d$gid[i],toString(sprintf("%02d",d$id)[i]),sep = "")
+}
+
+#############################
+
+library(readxl)
+library(lubridate)
+
+d <- data.frame(read_excel("C://Users//wanya//Desktop//BC NSC//file1179.xlsx"))
+d$EXAMDATE <- ymd(d$EXAMDATE)
+g <- read.csv("C://Users//wanya//Desktop//BC NSC//results.csv")
+g$Collection.Date <- dmy(g$Collection.Date)
+
+g$Global.Specimen.ID <- substr(g$Global.Specimen.ID,1,nchar(g$Global.Specimen.ID)-3)
+g <- unique(g)
+names(g) <- c("RID","EXAMDATE","GID")
+
+t <- merge(d,g,by = c("RID","EXAMDATE"),all.x = TRUE)
+
+t <- read.csv("C://Users//wanya//Desktop//BC NSC//1179_location.csv")
+t$Storage.Unit <- substr(t$Storage.Unit,nchar(t$Storage.Unit)-1,nchar(t$Storage.Unit))
+t$Sub.Level <- sapply(t$Sub.Level,function(i) strsplit(i," ")[[1]][5])
+t$Container <- sapply(t$Container,function(i) strsplit(i," ")[[1]][2])
+
+#############################
+
+d <- data.frame(read_excel("C://Users//wanya//Desktop//BC NSC//file1065.xlsx"))
+d$EXAMDATE <- ymd(d$EXAMDATE)
+g <- read.csv("C://Users//wanya//Desktop//BC NSC//results.csv")
+g$Collection.Date <- dmy(g$Collection.Date)
+
+g$Global.Specimen.ID <- substr(g$Global.Specimen.ID,1,nchar(g$Global.Specimen.ID)-3)
+g <- unique(g)
+names(g) <- c("RID","EXAMDATE","GID")
+
+t <- merge(d,g,by = c("RID","EXAMDATE"),all.x = TRUE)
+
+t <- read.csv("C://Users//wanya//Desktop//BC NSC//1065_location.csv")
+t$Storage.Unit <- substr(t$Storage.Unit,nchar(t$Storage.Unit)-1,nchar(t$Storage.Unit))
+t$Sub.Level <- sapply(t$Sub.Level,function(i) strsplit(i," ")[[1]][5])
+t$Container <- sapply(t$Container,function(i) strsplit(i," ")[[1]][2])
+
+t1 <- read.csv("C://Users//wanya//Desktop//BC NSC//file1065.csv")
+
+#############################
+
+d1 <- read.csv("C://Users//wanya//Desktop//Yassine//New folder//Yassine_CSF-1.csv")
+d2 <- read.csv("C://Users//wanya//Desktop//Yassine//New folder//Yassine_plasma-1.csv")
+d1$id <- 1:nrow(d1)
+d2$id <- 1:nrow(d2)
+
+t <- read.csv("C://Users//wanya//Desktop//Yassine//New folder//results.csv")
+names(t) <- c("RID","EXAMDATE","Sample_ID")
+names(d1)[3] <- "Sample_ID"
+names(d2)[3] <- "Sample_ID"
+
+d1 <- merge(d1,t,by = "Sample_ID")
+d2 <- merge(d2,t,by = "Sample_ID")
+d1$EXAMDATE <- dmy(d1$EXAMDATE)
+d2$EXAMDATE <- dmy(d2$EXAMDATE)
+
+t <- force(inventory)
+t1 <- t[t$EVENT == "CSF",]
+t2 <- t[t$EVENT == "Blood",]
+t1$EXAMDATE <- mdy(t1$EXAMDATE)
+t2$EXAMDATE <- mdy(t2$EXAMDATE)
+t1 <- t1[,c(1,4,8)]
+t2 <- t2[,c(1,4,8)]
+
+csf <- merge(d1,t1,by = c("RID","EXAMDATE"),all.x = TRUE)
+csf[is.na(csf$VISCODE2),]$VISCODE2 <- "UNK"
+pla <- merge(d2,t2,by = c("RID","EXAMDATE"),all.x = TRUE)
+pla[is.na(pla$VISCODE2),]$VISCODE2 <- "UNK"
+
+write.csv(csf,"C://Users//wanya//Desktop//Yassine//New folder//Yassine_CSF-1_unblind.csv")
+write.csv(pla,"C://Users//wanya//Desktop//Yassine//New folder//Yassine_plasma-1_unblind.csv")
+
+############################## apply
+# http://rstudio-pubs-static.s3.amazonaws.com/21347_418bc228038d4e94815018ad415bba49.html
+tapply(iris$Sepal.Length, iris$Species, function(x) c(min(x), median(x), max(x)))
+
+
+#############################
+library(readxl)
+library(lubridate)
+library(ADNIMERGE)
+
+d <- data.frame(read_excel("C://Users//wanya//Desktop//unblind//oAb_ADNI//Copy of oAb_ADNI.xlsx"))
+names(d)[1] <- "Sample_ID"
+d1 <- read.csv("C://Users//wanya//Desktop//unblind//oAb_ADNI//results.csv")
+names(d1) <- c("Sample_ID","RID","EXAMDATE")
+d1$EXAMDATE <- dmy(d1$EXAMDATE)
+d2 <- force(inventory)
+d2 <- d2[d2$EVENT == "Blood",]
+d2 <- d2[,c(1,4,8)]
+d2$EXAMDATE <- mdy(d2$EXAMDATE)
+
+d[d$Sample_ID == "ADNIRARC000980",]$Sample_ID <- "BA808GL7-11"
+d[d$Sample_ID == "ADNIRARC000981",]$Sample_ID <- "KA80C5XF-11"
+d[d$Sample_ID == "ADNIRARC000982",]$Sample_ID <- "CA8072N5-06"
+d[d$Sample_ID == "ADNIRARC000983",]$Sample_ID <- "KA807PQW-09"
+d[d$Sample_ID == "ADNIRARC000984",]$Sample_ID <- "DA807DS8-04"
+d[d$Sample_ID == "ADNIRARC000985",]$Sample_ID <- "HA807SPT-11"
+d[d$Sample_ID == "ADNIRARC000986",]$Sample_ID <- "CA808482-14"
+d[d$Sample_ID == "ADNIRARC000987",]$Sample_ID <- "AA8088Z7-07"
+d[d$Sample_ID == "ADNIRARC000988",]$Sample_ID <- "DA808PPP-04"
+d[d$Sample_ID == "ADNIRARC000989",]$Sample_ID <- "CA808SLN-04"
+d[d$Sample_ID == "ADNIRARC000990",]$Sample_ID <- "HA80BS2X-11"
+d[d$Sample_ID == "ADNIRARC000991",]$Sample_ID <- "HA80JLW9-02"
+d[d$Sample_ID == "ADNIRARC000992",]$Sample_ID <- "JA80L826-02"
+d[d$Sample_ID == "ADNIRARC000993",]$Sample_ID <- "AA80JZ2L-02"
+d[d$Sample_ID == "ADNIRARC000994",]$Sample_ID <- "AA807P44-14"
+d[d$Sample_ID == "ADNIRARC000995",]$Sample_ID <- "EA8073TJ-03"
+d[d$Sample_ID == "ADNIRARC000996",]$Sample_ID <- "GA80C2J8-04"
+d[d$Sample_ID == "ADNIRARC000997",]$Sample_ID <- "HA80CH7D-03"
+d[d$Sample_ID == "ADNIRARC000998",]$Sample_ID <- "GA80NYFT-04"
+d[d$Sample_ID == "ADNIRARC000999",]$Sample_ID <- "DA807N7W-06"
+
+d <- merge(d,d1,by = "Sample_ID",all.x = TRUE)
+d$EXAMDATE <- dmy(d$EXAMDATE)
+
+d$VISCODE <- NA
+for(i in 1:nrow(d))
+{
+  t <- na.omit(d2[d2$RID == d$RID[i],])
+  if(nrow(t)==0)
+  {
+    d$VISCODE[i] <- "UNK"
+    next
+  }
+  t$diff <- abs(t$EXAMDATE - d$EXAMDATE[i])
+  if(min(t$diff)[1]>90)
+  {
+    d$VISCODE[i] <- "UNK"
+    next
+  } else
+  {
+    d$VISCODE[i] <- t[t$diff==min(t$diff),]$VISCODE2[1]
+  }
+}
+
+############################## 
+
+d <- read.csv("C://Users//wanya//Desktop//BC NSC//1065_location.csv")
+
+d$GID <- substr(d$GID,1,nchar(d$GID)-2)
+
+for (i in seq(nrow(d)))
+{
+  d$GID[i] <- paste(d$GID[i],toString(sprintf("%02d",d$id)[i]),sep = "")
+}
