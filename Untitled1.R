@@ -677,3 +677,468 @@ for (i in seq(nrow(d)))
 {
   d$GID[i] <- paste(d$GID[i],toString(sprintf("%02d",d$id)[i]),sep = "")
 }
+
+
+##############################
+
+d <- d[d$EVENT == "CSF",]
+d <- d[,c(1,4,8)]
+d$EXAMDATE <- mdy(d$EXAMDATE)
+
+##
+d1 <- read.csv("C://Users//wanya//Desktop//BIOMK//UPENNBIOMK9 - Copy.csv")
+d1$EXAMDATE <- mdy(d1$EXAMDATE)
+
+for(i in 1:nrow(d1))
+{
+  if(d1$COMMENT[i]!="")
+  {
+    d1$ABETA42[i] <- strsplit(d1$COMMENT[i], " +")[[1]][5]
+  }
+}
+d1[d1$COMMENT!="",]$COMMENT <- "Abeta42>1700"
+d1$EXAMDATE <- mdy(d1$EXAMDATE)
+
+d1$VISCODE2 <- NA
+for (i in 1:nrow(d1))
+{
+  t <- d[d$RID==d1$RID[i],]
+  t$diff <- abs(t$EXAMDATE - d1$EXAMDATE[i])
+  if(min(t$diff)>90)
+  {
+    d1$VISCODE2[i] <- NA
+    next
+  }
+  else
+  {
+    d1$VISCODE2[i] <- t[t$diff==min(t$diff),]$VISCODE2[1]
+  }
+}
+write.csv(d1,"C://Users//wanya//Desktop//BIOMK//UPENNBIOMK9_v1.csv")
+
+##
+d2 <- read.csv("C://Users//wanya//Desktop//BIOMK//UPENNBIOMK10.csv")
+d2$EXAMDATE <- mdy(d2$EXAMDATE)
+d2$BATCH <- "UPENNBIOMK10"
+names(d2)[5] <- "ABETA42"
+names(d2)[6] <- "ABETA40"
+d2[d2$NOTE == "Abeta>1700",]$NOTE <- "Abeta42>1700"
+
+t <- read.csv("C://Users//wanya//Desktop//BIOMK//results.csv")
+t$EXAMDATE <- dmy(t$EXAMDATE)
+t <- unique(t)
+d2$PHASE <- NA
+for(i in 1:nrow(d2))
+{
+  t1 <- t[t$RID == d2$RID[i],]
+  t1$diff <- abs(t1$EXAMDATE-d2$EXAMDATE[i])
+  if(min(t1$diff>90))
+  {
+    next
+  }
+  else
+  {
+    d2$PHASE[i] <- t1[t1$diff == min(t1$diff),]$PHASE[1]
+  }
+}
+d2$VISCODE2 <- NA
+for (i in 1:nrow(d2))
+{
+  t <- d[d$RID==d2$RID[i],]
+  t$diff <- abs(t$EXAMDATE - d2$EXAMDATE[i])
+  if(min(t$diff)>90)
+  {
+    next
+  }
+  else
+  {
+    d2$VISCODE2[i] <- t[t$diff==min(t$diff),]$VISCODE2[1]
+  }
+}
+write.csv(d2,"C://Users//wanya//Desktop//BIOMK//UPENNBIOMK10_v1.csv")
+
+##
+d3 <- read.csv("C://Users//wanya//Desktop//BIOMK//UPENNBIOMK10_07_29_19.csv")
+d3$EXAMDATE <- mdy(d3$EXAMDATE)
+
+t <- read.csv("C://Users//wanya//Desktop//BIOMK//results.csv")
+t$EXAMDATE <- dmy(t$EXAMDATE)
+t <- unique(t)
+d3$PHASE <- NA
+for(i in 1:nrow(d3))
+{
+  t1 <- t[t$RID == d3$RID[i],]
+  t1$diff <- abs(t1$EXAMDATE-d3$EXAMDATE[i])
+  if(min(t1$diff>90))
+  {
+    next
+  }
+  else
+  {
+    d3$PHASE[i] <- t1[t1$diff == min(t1$diff),]$PHASE[1]
+  }
+}
+d3$VISCODE2 <- NA
+for (i in 1:nrow(d3))
+{
+  t <- d[d$RID==d3$RID[i],]
+  if(nrow(t)==0)
+  {
+    next
+  }
+  t$diff <- abs(t$EXAMDATE - d3$EXAMDATE[i])
+  if(min(t$diff)>90)
+  {
+    next
+  }
+  else
+  {
+    d3$VISCODE2[i] <- t[t$diff==min(t$diff),]$VISCODE2[1]
+  }
+}
+d3$BATCH <- "UPENNBIOMK11"
+write.csv(d3,"C://Users//wanya//Desktop//BIOMK//UPENNBIOMK11_v1.csv")
+
+##
+d4 <- read.csv("C://Users//wanya//Desktop//BIOMK//UPENNBIOMK12.csv")
+names(d4)[1] <- "PHASE"
+names(d4)[5] <- "ABETA40"
+names(d4)[6] <- "ABETA42"
+d4$EXAMDATE <- mdy(d4$EXAMDATE)
+d4 <- d4[d4$PHASE != "ADNI DOD",]
+
+d4$VISCODE2 <- NA
+for (i in 1:nrow(d4))
+{
+  t <- d[d$RID==d4$RID[i],]
+  if(nrow(t)==0)
+  {
+    next
+  }
+  t$diff <- abs(t$EXAMDATE - d4$EXAMDATE[i])
+  if(min(t$diff)>90)
+  {
+    next
+  }
+  else
+  {
+    d4$VISCODE2[i] <- t[t$diff==min(t$diff),]$VISCODE2[1]
+  }
+}
+d4$BATCH <- "UPENNBIOMK12"
+write.csv(d4,"C://Users//wanya//Desktop//BIOMK//UPENNBIOMK12_v1.csv")
+
+##
+d5 <- read.csv("C://Users//wanya//Desktop//BIOMK//UPENNBIOMK13.csv")
+d5$EXAMDATE <- mdy(d5$EXAMDATE)
+
+t <- read.csv("C://Users//wanya//Desktop//BIOMK//results.csv")
+t$EXAMDATE <- dmy(t$EXAMDATE)
+t <- unique(t)
+d5$PHASE <- NA
+for(i in 1:nrow(d5))
+{
+  t1 <- t[t$RID == d5$RID[i],]
+  t1$diff <- abs(t1$EXAMDATE-d5$EXAMDATE[i])
+  if(min(t1$diff>90))
+  {
+    next
+  }
+  else
+  {
+    d5$PHASE[i] <- t1[t1$diff == min(t1$diff),]$PHASE[1]
+  }
+}
+d5$VISCODE2 <- NA
+for (i in 1:nrow(d5))
+{
+  t <- d[d$RID==d5$RID[i],]
+  if(nrow(t)==0)
+  {
+    next
+  }
+  t$diff <- abs(t$EXAMDATE - d5$EXAMDATE[i])
+  if(min(t$diff)>90)
+  {
+    next
+  }
+  else
+  {
+    d5$VISCODE2[i] <- t[t$diff==min(t$diff),]$VISCODE2[1]
+  }
+}
+d5$BATCH <- "UPENNBIOMK13"
+write.csv(d5,"C://Users//wanya//Desktop//BIOMK//UPENNBIOMK13_v1.csv")
+
+##
+d6 <- data.frame(read_excel("C://Users//wanya//Desktop//BIOMK//UPenn_BIOMK9TO13_MASTERFILE_Roche.xlsx"))
+d6 <- d6[rowSums(is.na(d6)) != ncol(d6), ]
+d6[is.na(d6$COMMENT),]$COMMENT <- "NA"
+
+d6[d6$COMMENT == "p-Tau <8",]$COMMENT <- "PTau<8"
+d6[d6$COMMENT == "p-Tau >120",]$COMMENT <- "PTau>120"
+
+write.csv(d6,"C://Users//wanya//Desktop//BIOMK//UPenn_BIOMK9TO13_MASTERFILE_Roche.csv")
+
+##############################
+
+d <- data.frame(read_excel("C://Users//wanya//Desktop//AMPRION//ADNI_AMPRION_SAA_DATA.xlsx"))
+d$id <- 1:nrow(d)
+d[d$Specimen.ID == "DA80FL8R01",]$Specimen.ID <- "DA80FL8R-01"
+d[d$Specimen.ID == "REPLICATE 1",]$Specimen.ID <- "HA8080DP-02"
+d[d$Specimen.ID == "REPLICATE 2",]$Specimen.ID <- "KA8080W0-06"
+d[d$Specimen.ID == "REPLICATE 3",]$Specimen.ID <- "FA807QCG-02"
+d[d$Specimen.ID == "REPLICATE 4",]$Specimen.ID <- "CA807QDJ-02"
+d[d$Specimen.ID == "REPLICATE 5",]$Specimen.ID <- "GA806Z3H-03"
+d[d$Specimen.ID == "REPLICATE 6",]$Specimen.ID <- "FA8078D1-02"
+d[d$Specimen.ID == "REPLICATE 7",]$Specimen.ID <- "AA8078F5-02"
+d[d$Specimen.ID == "REPLICATE 8",]$Specimen.ID <- "BA8078GC-02"
+d[d$Specimen.ID == "REPLICATE 9",]$Specimen.ID <- "GA80G1P3-02"
+d[d$Specimen.ID == "REPLICATE 10",]$Specimen.ID <- "DA80G23R-02"
+d[d$Specimen.ID == "REPLICATE 11",]$Specimen.ID <- "DA80G24X-02"
+d[d$Specimen.ID == "REPLICATE 12",]$Specimen.ID <- "GA80G2F4-02"
+d[d$Specimen.ID == "REPLICATE 13",]$Specimen.ID <- "KA80G2TJ-02"
+d[d$Specimen.ID == "REPLICATE 14",]$Specimen.ID <- "KA80G2VV-02"
+d[d$Specimen.ID == "REPLICATE 15",]$Specimen.ID <- "EA80G6PL-02"
+d[d$Specimen.ID == "REPLICATE 16",]$Specimen.ID <- "FA80G6R2-02"
+d[d$Specimen.ID == "REPLICATE 17",]$Specimen.ID <- "CA80G6S7-02"
+d[d$Specimen.ID == "REPLICATE 18",]$Specimen.ID <- "GA80G7CK-02"
+d[d$Specimen.ID == "REPLICATE 19",]$Specimen.ID <- "AA80G7WZ-02"
+d[d$Specimen.ID == "REPLICATE 20",]$Specimen.ID <- "BA80G7ND-02"
+
+
+d1 <- read.csv("C://Users//wanya//Desktop//AMPRION//results.csv")
+d1$Collection.Date <- dmy(d1$Collection.Date)
+
+names(d)[1] <- "Sample_ID"
+names(d1)[2] <- "Sample_ID"
+
+d <- merge(d,d1,by = "Sample_ID")
+names(d)[8] <- "EXAMDATE"
+names(d)[7] <- "RID"
+
+d1 <- force(inventory)
+d1 <- d1[d1$EVENT == "CSF",][,c(1,4,8)]
+d1$EXAMDATE <- mdy(d1$EXAMDATE)
+
+d$VISCODE2 <- NA
+for(i in 1:nrow(d))
+{
+  t <- d1[d1$RID == d$RID[i],]
+  if(nrow(t)==0)
+  {
+    next
+  }
+  t$diff <- abs(t$EXAMDATE - d$EXAMDATE[i])
+  if(min(t$diff)[1]>90)
+  {
+    next
+  } else
+  {
+    d$VISCODE2[i] <- t[t$diff == min(t$diff),]$VISCODE2[1]
+  }
+}
+
+write.csv(d,"C://Users//wanya//Desktop//AMPRION//ADNI_AMPRION_SAA_DATA_unblind.csv")
+
+##############################
+
+d1 <- read.csv("C://Users//wanya//Desktop//BC_NSC//1179_location.CSV")
+d1$Global_ID <- substr(d1$Global_ID,1,nchar(d1$Global_ID)-3)
+names(d1)[1] <- "GID"
+
+d2 <- read.csv("C://Users//wanya//Desktop//BC_NSC//file1179.CSV")
+d2 <- d2[,c(2,3,26)]
+
+d3 <- merge(d1,d2,by = "GID")
+
+d <- read.csv("C://Users//wanya//Desktop//update available+//amyloid_PET_min3Freq_gap6month_atleast6aliquot.csv")
+
+d <- read.csv("C://Users//wanya//Desktop//BC_NSC//1179_location.CSV")
+d1 <- read.csv("C://Users//wanya//Desktop//BC_NSC//results.csv")
+names(d1)[3] <- "Global_ID"
+
+d2 <- merge(d,d1,by = "Global_ID")
+d2 <- d2[!is.na(d2$id),]
+
+d <- read.csv("C://Users//wanya//Desktop//BC_NSC//2FBPSub.csv")
+d <- d[,c(1,2)]
+d$id <- 1:nrow(d)
+d$EXAMDATE <- mdy(d$EXAMDATE)
+d1 <- read.csv("C://Users//wanya//Desktop//BC_NSC//results.csv")
+names(d1) <- c("RID","EXAMDATE","GID")
+d1$EXAMDATE <- dmy(d1$EXAMDATE)
+d1$GID <- substr(d1$GID,1,nchar(d1$GID)-3)
+
+
+d2 <- unique(merge(d,d1,by = c("RID","EXAMDATE")))
+d3 <- read.csv("C://Users//wanya//Desktop//BC_NSC//2FBPSub_v1_location.csv")
+d2$GID <- paste0(d2$GID,"-05")
+d3 <- merge(d2,d3,by = "GID")
+
+##############################
+
+d <- read.csv("C://Users//wanya//Desktop//BC_NSC//1179_location_v2.csv")
+
+d1 <- d[!is.na(d$id),]
+d1$order <- 1:nrow(d1)
+t <- read.csv("C://Users//wanya//Desktop//BC_NSC//results.csv")
+names(t) <- c("RID","EXAMDATE","Global_ID")
+
+d2 <- merge(d1,t,by = "Global_ID")
+
+##############################
+
+d <- data.frame(read_excel("C://Users//wanya//Desktop//Roche//New folder//batch3.xlsx"))
+d <- d[,-c(10)]
+d$AB42 <- as.double(d$ABETA)
+d$PTAU <- as.double(d$PTAU)
+d$TAU <- as.double(d$TAU)
+d$AB4240 <- as.double(d$AB4240)
+d <- na.omit(d)
+
+d1 <- data.frame(matrix(nrow = 1,ncol = 13))
+names(d1) <- c("RID","AB40_original","AB42_original","PTAU_original","TAU_original","AB4240_original",
+               "AB40_latest","AB42_latest","PTAU_latest","TAU_latest","AB4240_latest","original","latest")
+
+for(i in seq(nrow(d)))
+{
+  t <- d[d$RID == d$RID[i] & d$EXAMDATE == d$EXAMDATE[i],]
+  if(nrow(t)==1) next
+  
+  d1[i,1] <- t$RID[1]
+  
+  d1[i,2] <- mean(t$AB40[t$RUNDATE==min(t$RUNDATE)])
+  d1[i,3] <- mean(t$AB42[t$RUNDATE==min(t$RUNDATE)])
+  d1[i,4] <- mean(t$PTAU[t$RUNDATE==min(t$RUNDATE)])
+  d1[i,5] <- mean(t$TAU[t$RUNDATE==min(t$RUNDATE)])
+  d1[i,6] <- mean(t$AB4240[t$RUNDATE==min(t$RUNDATE)])
+  
+  d1[i,7] <- mean(t$AB40[t$RUNDATE==max(t$RUNDATE)])
+  d1[i,8] <- mean(t$AB42[t$RUNDATE==max(t$RUNDATE)])
+  d1[i,9] <- mean(t$PTAU[t$RUNDATE==max(t$RUNDATE)])
+  d1[i,10] <- mean(t$TAU[t$RUNDATE==max(t$RUNDATE)])
+  d1[i,11] <- mean(t$AB4240[t$RUNDATE==max(t$RUNDATE)])
+  
+  d1[i,12] <- min(t$RUNDATE)
+  d1[i,13] <- max(t$RUNDATE)
+}
+
+d1 <- na.omit(d1)
+d1 <- unique(d1)
+
+timeDate <- as.POSIXct("2021-01-01")   # convert date to large number
+t <- unclass(timeDate)[[1]]
+
+d1 <- d1[d1$original < t & d1$latest > t,] # only 1st rundate before 2021 and last rundate after 2021 are selected
+model2 <- lm(d1[,8]~d1[,3],data = d1)
+
+p2 <- ggplot(d1,aes(AB42_original, AB42_latest)) + geom_point() + geom_smooth(method='lm') +
+  annotate("text", x = 400, y = 3000, label = "AB42_2021 = 1.168*AB42_original - 86.12", hjust = 0) +
+  annotate("text", x = 400, y = 2750, label = paste("R-squared:",round(summary(model2)$r.squared,4)), hjust = 0)
+
+##############################
+
+d <- read.csv("C://Users//wanya//Desktop//BIOMK//UPenn_BIOMK9TO13_MASTERFILE_Roche_withoutBIOMK10.csv")
+
+d1 <- d[d$BATCH == "UPENNBIOMK9",]
+d2 <- d[d$BATCH == "UPENNBIOMK11",]
+
+d1$t <- paste(d1$RID,d1$EXAMDATE)
+d2$t <- paste(d2$RID,d2$EXAMDATE)
+
+##############################
+
+d1 <- read.csv("C://Users//wanya//Desktop//BIOMK//Roche Elecsys ADNI1_GO_2_3 CSF.csv")
+d2 <- read.csv("C://Users//wanya//Desktop//BIOMK//UCBERKELEY_AMY_6MM_12Oct2023.csv")
+
+d2 <- d2[,c(2,5,13)]
+d1$EXAMDATE <- mdy(d1$EXAMDATE)
+d2$EXAMDATE <- ymd(d2$SCANDATE)
+d2 <- d2[!is.na(d2$SUMMARY_SUVR),]
+
+d1$SUMMARY_SUVR <- NA
+d1$result <- NA
+for(i in 1:nrow(d1))
+{
+  t <- d2[d2$RID == d1$RID[i],]
+  if(nrow(t) == 0)
+  {
+    d1$SUMMARY_SUVR[i] <- NA
+    next
+  }
+  t$diff <- abs(t$EXAMDATE - d1$EXAMDATE[i])
+  if(min(t$diff)>180)
+  {
+    d1$SUMMARY_SUVR[i] <- NA
+    next
+  } else 
+  {
+    d1$SUMMARY_SUVR[i] <- t[t$diff == min(t$diff),]$SUMMARY_SUVR[1]
+    if(d1$SUMMARY_SUVR[i]<1.11)
+    {
+      d1$result[i] <- "-"
+    } else
+    {
+      d1$result[i] <- "+"
+    }
+  }
+}
+
+write.csv(d1,"C://Users//wanya//Desktop//BIOMK//UPenn_BIOMK9TO13_MASTERFILE_Roche_v2.csv")
+
+d2 <- d1[!is.na(d1$ABETA42) & !is.na(d1$SUMMARY_SUVR),]
+
+d3 <- read.csv("C://Users//wanya//Desktop//BIOMK//DXSUM_PDXCONV_ADNIALL_12Oct2023.csv")[,c("Phase","RID","VISCODE","EXAMDATE","USERDATE","DXCURREN","DXCHANGE","DIAGNOSIS")]
+d3$DXCURREN[is.na(d3$DXCURREN)] = d3$DXCHANGE[is.na(d3$DXCURREN)]
+d3$DXCURREN[is.na(d3$DXCURREN)] = d3$DIAGNOSIS[is.na(d3$DXCURREN)]
+
+library(Epi) 
+d3$DX      = Relevel(factor(d3$DXCURREN), list(NL=c(1,7,9), MCI=c(2,4,8), AD=c(3,5,6), EMCI=0))
+d3$DODX    = d3$DATE
+d3$EXAMDATE <- ymd(d3$EXAMDATE)
+
+d2$DX <- NA
+for(i in 1:nrow(d2))
+{
+  t <- d3[d3$RID == d2$RID[i],]
+  t <- t[!is.na(t$EXAMDATE),]
+  if(nrow(t)==0)
+  {
+    d2$DX[i] <- NA
+    next
+  }
+  t$diff <- abs(t$EXAMDATE - d2$EXAMDATE[i])
+  if(min(t$diff)>180)
+  {
+    d2$DX[i] <- NA
+    next
+  } else
+  {
+    d2$DX[i] <- as.character(t[t$diff == min(t$diff),]$DX[1])
+  }
+}
+
+d3 <- d2[!is.na(d2$DX),]
+d3[d3$DX == "NL",]$DX <- "HC"
+names(d3)[14] <- "Diagnosis"
+
+##
+ggplot(d3, aes(x=SUMMARY_SUVR, y=ABETA42, color=Diagnosis)) + 
+  geom_point(alpha=0.75,size=1) + labs(
+    title = "Aβ42 vs FBP PET",
+    # subtitle = "(1973-74)",
+    # caption = "Data from the 1974 Motor Trend US magazine.",
+    tag = "Figure 1",
+    x = "FBP SUVR",
+    y = "Aβ42 (pg/mL)",
+    colour = "Diagnosis"
+  ) + theme_bw()
+##
+plot(d3$SUMMARY_SUVR, d3$ABETA42,
+     pch = 19,
+     col = factor(d3$Diagnosis))
+legend("topright",
+       legend = levels(factor(d3$Diagnosis)),
+       pch = 19,
+       col = factor(levels(factor(d3$Diagnosis))))
