@@ -1140,10 +1140,10 @@ plot1 <- ggplot(d3, aes(x=ABETA42, y=SUMMARY_SUVR, color=Diagnosis)) +
 plot1 <- plot1 + geom_hline(yintercept=1.1,linetype = 2, color = 2) + annotate("text", x=4500, y=1.15, label="FBP SUVR = 1.1") +
   geom_vline(xintercept=980,linetype = 2, color = 2) + annotate("text", x=1450, y=2.5, label="Abeta 42 = 980")
 
-plot1 + annotate("text", x = 500, y = 2.875, label = "FBP+/CSF+\nn = 859") +
-  annotate("text", x = 500, y = 0.75, label = "FBP-/CSF+\nn = 187") + 
-  annotate("text", x = 4500, y = 2.875, label = "FBP+/CSF-\nn = 169") + 
-  annotate("text", x = 4500, y = 0.75, label = "FBP-/CSF-\nn = 852")
+plot1 + annotate("text", x = 500, y = 2.875, label = "FBP+/CSF+\nn = 852") +
+  annotate("text", x = 500, y = 0.75, label = "FBP-/CSF+\nn = 194") + 
+  annotate("text", x = 4500, y = 2.875, label = "FBP+/CSF-\nn = 155") + 
+  annotate("text", x = 4500, y = 0.75, label = "FBP-/CSF-\nn = 866")
 
 ## Ptau 181 / ABeta 42
 d4 <- d2[!is.na(d2$ABETA42) & !is.na(d2$PTAU) & !is.na(d2$DX),]
@@ -1166,10 +1166,10 @@ plot2 <- ggplot(d4, aes(x=Ptau181_Abeta42, y=SUMMARY_SUVR, color=Diagnosis)) +
 plot2 <- plot2 + geom_hline(yintercept=1.1,linetype = 2, color = 2) + annotate("text", x=0.2, y=1.15, label="FBP SUVR = 1.1") +
   geom_vline(xintercept=0.025,linetype = 2, color = 2) + annotate("text", x=0.0625, y=2.5, label="Ptau181/Abeta42 = 0.025")
 
-plot2 + annotate("text", x = 0.01, y = 2.875, label = "FBP+/Ratio+\nn = 158") +
-  annotate("text", x = 0.01, y = 0.75, label = "FBP-/Ratio+\nn = 965") + 
-  annotate("text", x = 0.25, y = 2.875, label = "FBP+/Ratio-\nn = 869") + 
-  annotate("text", x = 0.25, y = 0.75, label = "FBP-/Ratio-\nn = 61")
+plot2 + annotate("text", x = 0.01, y = 2.875, label = "FBP+/Ratio-\nn = 143") +
+  annotate("text", x = 0.01, y = 0.75, label = "FBP-/Ratio-\nn = 980") + 
+  annotate("text", x = 0.25, y = 2.875, label = "FBP+/Ratio+\nn = 863") + 
+  annotate("text", x = 0.25, y = 0.75, label = "FBP-/Ratio+\nn = 67")
 
 ## ABeta 42 / 40
 d5 <- d2[!is.na(d2$ABETA40) & !is.na(d2$ABETA42) & !is.na(d2$DX) & d2$PHASE == "ADNI3",]
@@ -1193,14 +1193,70 @@ plot3 <- ggplot(d5, aes(x=ab42_ab40, y=SUMMARY_SUVR, color=Diagnosis)) +
 plot3 <- plot3 + geom_hline(yintercept=1.1,linetype = 2, color = 2) + annotate("text", x=0.125, y=1.15, label="FBP SUVR = 1.1") +
   geom_vline(xintercept=0.06093,linetype = 2, color = 2) + annotate("text", x=0.08, y=2, label="Abeta42/Abeta40 = 0.061")
 
-plot3 + annotate("text", x = 0.02, y = 2.1, label = "FBP+/Ratio+\nn = 271") +
-  annotate("text", x = 0.02, y = 0.8, label = "FBP-/Ratio+\nn = 62") + 
-  annotate("text", x = 0.13, y = 2.1, label = "FBP+/Ratio-\nn = 22") + 
-  annotate("text", x = 0.13, y = 0.8, label = "FBP-/Ratio-\nn = 332")
+plot3 + annotate("text", x = 0.02, y = 2.1, label = "FBP+/Ratio+\nn = 266") +
+  annotate("text", x = 0.02, y = 0.8, label = "FBP-/Ratio+\nn = 67") + 
+  annotate("text", x = 0.13, y = 2.1, label = "FBP+/Ratio-\nn = 18") + 
+  annotate("text", x = 0.13, y = 0.8, label = "FBP-/Ratio-\nn = 336")
 
+## abeta42/40 cutoff
 out <- em(d5$ab42_ab40,"normal","normal")
 confint(out)
 cutoff(out)
+
+## ROC
+library(plotROC)
+
+d6 <- d2[!is.na(d2$DX),]
+d6[d6$DX == "NL",]$DX <- "HC"
+names(d6)[14] <- "Diagnosis"
+d6$rid_date <- paste(d6$RID,d6$EXAMDATE)
+d6 <- d6[!duplicated(d6$rid_date),]
+
+d6$Ptau181_Abeta42 <- d6$PTAU/d6$ABETA42*100
+d6$ab42_ab40 <- d6$ABETA42/d6$ABETA40*100
+d6[!d6$PHASE == "ADNI3",]$ab42_ab40 <- NA
+
+d6$result2[d6$SUMMARY_SUVR < 1.11] <- 0
+d6$result2[d6$SUMMARY_SUVR >= 1.11] <- 1
+
+d6 <- d6[]
+
+
+longtest <- melt_roc(d6, "result2", c("ABETA42","Ptau181_Abeta42","ab42_ab40"))
+
+p <- ggplot(longtest, aes(d = D, m = M, color = name)) + geom_roc() + style_roc() +
+  ggtitle(gsub("  ", 2067, "pT181P and pT181P.QUANTERIX and pT181P.ROCHE (n=  )")) + 
+  geom_abline(slope=1, intercept = 0, linetype = "dashed") + scale_color_manual(values=c("#CC6666","#9999CC","#1d91c0")) + 
+  scale_x_continuous("1 - Specificity",breaks = seq(0, 1, by = .1)) +
+  scale_y_continuous("Sensitivity",breaks = seq(0, 1, by = .1)) +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=15))
+
+library(OptimalCutpoints)
+results1 <- optimal.cutpoints(X = "ABETA42", status = "result2",tag.healthy = 0, method = "Youden", data = d6)
+results2 <- optimal.cutpoints(X = "Ptau181_Abeta42", status = "result2",tag.healthy = 0, method = "Youden", data = d6)
+results3 <- optimal.cutpoints(X = "ab42_ab40", status = "result2",tag.healthy = 0, method = "Youden", data = d6)
+
+p+geom_point(aes(x=1-data.frame(summary(results1)[5])[3,1], y=data.frame(summary(results1)[5])[2,1]),shape = 18,size = 3,color="slateblue1") + # manually change
+  geom_point(aes(x=1-data.frame(summary(results2)[5])[3,1], y=data.frame(summary(results2)[5])[2,1]),shape = 18,size = 3,color="tomato") +
+  geom_point(aes(x=1-data.frame(summary(results3)[5])[3,1], y=data.frame(summary(results3)[5])[2,1]),shape = 18,size = 3,color="darkblue") +
+  geom_label(label=paste("95%CI ABETA42: ",data.frame(summary(results1)[5])[1,2],
+                         "\n95%CI Ptau181/Abeta42 %: ",data.frame(summary(results2)[5])[1,2],
+                         "\n95%CI Abeta42/Abeta40 %: ",data.frame(summary(results3)[5])[1,2]),
+             x=0.5,
+             y=0.2,
+             label.padding = unit(0.5, "lines"), # Rectangle size around 
+             label.size = 0.3,
+             color = "black",
+             fill="white",
+             hjust = 0
+  )
+# https://rdrr.io/cran/plotROC/man/geom_roc.html
+p <- ggplot(t, aes(m = M, d = D, color = Name)) + geom_roc()+ style_roc() +
+  ggtitle("ABETA 42, Abeta42/40 ratio and Ptau181/Abeta42 ratio") + 
+  geom_abline(slope=1, intercept = 0, linetype = "dashed") + scale_color_manual(values=c("#CC6666","#9999CC","#1d91c0")) + 
+  scale_x_continuous("1 - Specificity",breaks = seq(0, 1, by = .1)) +
+  scale_y_continuous("Sensitivity",breaks = seq(0, 1, by = .1)) +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=15))
 
 ##############################
 
@@ -1217,3 +1273,17 @@ d1 <- unique(d1)
 d2 <- merge(d,d1,by = c("RID","EXAMDATE"))
 d2[d2$RID == 4565,]$GID <- "EA808TQ2"
 d2 <- unique(d2)
+
+##############################
+
+d <- read.csv("C://Users//wanya//Desktop//BC_NSC//1179_location_v3.csv")
+
+d$id2 <- d$id+5
+names(d)[1] <- "GID"
+d$GID <- substr(d$GID,1,nchar(d$GID)-2)
+
+for (i in seq(nrow(d)))
+{
+  d$GID[i] <- paste(d$GID[i],toString(sprintf("%02d",d$id2)[i]),sep = "")
+}
+
