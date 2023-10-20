@@ -1123,22 +1123,97 @@ d3 <- d2[!is.na(d2$DX),]
 d3[d3$DX == "NL",]$DX <- "HC"
 names(d3)[14] <- "Diagnosis"
 
-##
-ggplot(d3, aes(x=SUMMARY_SUVR, y=ABETA42, color=Diagnosis)) + 
+## ABeta 42
+d3$rid_date <- paste(d3$RID,d3$EXAMDATE)
+d3 <- d3[!duplicated(d3$rid_date),]
+plot1 <- ggplot(d3, aes(x=ABETA42, y=SUMMARY_SUVR, color=Diagnosis)) + 
   geom_point(alpha=0.75,size=1) + labs(
     title = "Aβ42 vs FBP PET",
-    # subtitle = "(1973-74)",
+    subtitle = "n = 2067",
     # caption = "Data from the 1974 Motor Trend US magazine.",
     tag = "Figure 1",
-    x = "FBP SUVR",
-    y = "Aβ42 (pg/mL)",
+    x = "Aβ42 (pg/mL)",
+    y = "FBP SUVR",
     colour = "Diagnosis"
   ) + theme_bw()
-##
-plot(d3$SUMMARY_SUVR, d3$ABETA42,
-     pch = 19,
-     col = factor(d3$Diagnosis))
-legend("topright",
-       legend = levels(factor(d3$Diagnosis)),
-       pch = 19,
-       col = factor(levels(factor(d3$Diagnosis))))
+
+plot1 <- plot1 + geom_hline(yintercept=1.1,linetype = 2, color = 2) + annotate("text", x=4500, y=1.15, label="FBP SUVR = 1.1") +
+  geom_vline(xintercept=980,linetype = 2, color = 2) + annotate("text", x=1450, y=2.5, label="Abeta 42 = 980")
+
+plot1 + annotate("text", x = 500, y = 2.875, label = "FBP+/CSF+\nn = 859") +
+  annotate("text", x = 500, y = 0.75, label = "FBP-/CSF+\nn = 187") + 
+  annotate("text", x = 4500, y = 2.875, label = "FBP+/CSF-\nn = 169") + 
+  annotate("text", x = 4500, y = 0.75, label = "FBP-/CSF-\nn = 852")
+
+## Ptau 181 / ABeta 42
+d4 <- d2[!is.na(d2$ABETA42) & !is.na(d2$PTAU) & !is.na(d2$DX),]
+d4$Ptau181_Abeta42 <- d4$PTAU/d4$ABETA42
+d4$rid_date <- paste(d4$RID,d4$EXAMDATE)
+d4 <- d4[!duplicated(d4$rid_date),]
+d4[d4$DX == "NL",]$DX <- "HC"
+names(d4)[14] <- "Diagnosis"
+plot2 <- ggplot(d4, aes(x=Ptau181_Abeta42, y=SUMMARY_SUVR, color=Diagnosis)) + 
+  geom_point(alpha=0.75,size=1) + labs(
+    title = "Ptau181/Abeta42 vs FBP PET",
+    subtitle = "n = 2053",
+    # caption = "Data from the 1974 Motor Trend US magazine.",
+    tag = "Figure 2",
+    x = "Ptau181/Abeta42 Ratio",
+    y = "FBP SUVR",
+    colour = "Diagnosis"
+  ) + theme_bw()
+
+plot2 <- plot2 + geom_hline(yintercept=1.1,linetype = 2, color = 2) + annotate("text", x=0.2, y=1.15, label="FBP SUVR = 1.1") +
+  geom_vline(xintercept=0.025,linetype = 2, color = 2) + annotate("text", x=0.0625, y=2.5, label="Ptau181/Abeta42 = 0.025")
+
+plot2 + annotate("text", x = 0.01, y = 2.875, label = "FBP+/Ratio+\nn = 158") +
+  annotate("text", x = 0.01, y = 0.75, label = "FBP-/Ratio+\nn = 965") + 
+  annotate("text", x = 0.25, y = 2.875, label = "FBP+/Ratio-\nn = 869") + 
+  annotate("text", x = 0.25, y = 0.75, label = "FBP-/Ratio-\nn = 61")
+
+## ABeta 42 / 40
+d5 <- d2[!is.na(d2$ABETA40) & !is.na(d2$ABETA42) & !is.na(d2$DX) & d2$PHASE == "ADNI3",]
+d5$rid_date <- paste(d5$RID,d5$EXAMDATE)
+d5 <- d5[!duplicated(d5$rid_date),]
+d5[d5$DX == "NL",]$DX <- "HC"
+names(d5)[14] <- "Diagnosis"
+
+d5$ab42_ab40 <- d5$ABETA42/d5$ABETA40
+plot3 <- ggplot(d5, aes(x=ab42_ab40, y=SUMMARY_SUVR, color=Diagnosis)) + 
+  geom_point(alpha=0.75,size=1) + labs(
+    title = "Abeta42/Abeta40 vs FBP PET",
+    subtitle = "n = 687",
+    # caption = "Data from the 1974 Motor Trend US magazine.",
+    tag = "Figure 2",
+    x = "Abeta42/Abeta40 Ratio",
+    y = "FBP SUVR",
+    colour = "Diagnosis"
+  ) + theme_bw()
+
+plot3 <- plot3 + geom_hline(yintercept=1.1,linetype = 2, color = 2) + annotate("text", x=0.125, y=1.15, label="FBP SUVR = 1.1") +
+  geom_vline(xintercept=0.06093,linetype = 2, color = 2) + annotate("text", x=0.08, y=2, label="Abeta42/Abeta40 = 0.061")
+
+plot3 + annotate("text", x = 0.02, y = 2.1, label = "FBP+/Ratio+\nn = 271") +
+  annotate("text", x = 0.02, y = 0.8, label = "FBP-/Ratio+\nn = 62") + 
+  annotate("text", x = 0.13, y = 2.1, label = "FBP+/Ratio-\nn = 22") + 
+  annotate("text", x = 0.13, y = 0.8, label = "FBP-/Ratio-\nn = 332")
+
+out <- em(d5$ab42_ab40,"normal","normal")
+confint(out)
+cutoff(out)
+
+##############################
+
+d <- read.csv("C://Users//wanya//Desktop//C2N//C2N_Plasma_MainCohort.csv")
+
+d$EXAMDATE <- ymd(d$EXAMDATE)
+
+d1 <- read.csv("C://Users//wanya//Desktop//C2N//results (1).csv")
+names(d1) <- c("GID","RID","EXAMDATE")
+d1$EXAMDATE <- dmy(d1$EXAMDATE)
+d1$GID <- substr(d1$GID,1,nchar(d1$GID)-3)
+d1 <- unique(d1)
+
+d2 <- merge(d,d1,by = c("RID","EXAMDATE"))
+d2[d2$RID == 4565,]$GID <- "EA808TQ2"
+d2 <- unique(d2)
