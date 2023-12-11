@@ -1122,10 +1122,9 @@ for(i in 1:nrow(d2))
 d3 <- d2[!is.na(d2$DX),]
 d3[d3$DX == "NL",]$DX <- "HC"
 names(d3)[14] <- "Diagnosis"
-
-## ABeta 42
 d3$rid_date <- paste(d3$RID,d3$EXAMDATE)
 d3 <- d3[!duplicated(d3$rid_date),]
+## ABeta 42
 plot1 <- ggplot(d3, aes(x=ABETA42, y=SUMMARY_SUVR, color=Diagnosis)) + 
   geom_point(alpha=0.75,size=1) + labs(
     title = "Aβ42 vs FBP PET",
@@ -1202,6 +1201,29 @@ plot3 + annotate("text", x = 0.02, y = 2.1, label = "FBP+/Ratio+\nn = 266") +
 out <- em(d5$ab42_ab40,"normal","normal")
 confint(out)
 cutoff(out)
+
+## TAU/ab42
+d3 <- d3[!is.na(d3$TAU),]
+d3$TAU_ab42 <- d3$TAU/d3$ABETA42
+plot1 <- ggplot(d3, aes(x=TAU_ab42, y=SUMMARY_SUVR, color=Diagnosis)) + 
+  geom_point(alpha=0.75,size=1) + labs(
+    title = "TAU/Abeta42 vs FBP PET",
+    subtitle = "n = 2063",
+    # caption = "Data from the 1974 Motor Trend US magazine.",
+    tag = "Figure 3",
+    x = "TAU/Abeta42 Ratio",
+    y = "FBP SUVR",
+    colour = "Diagnosis"
+  ) + theme_bw()
+
+plot1 <- plot1 + geom_hline(yintercept=1.1,linetype = 2, color = 2) + annotate("text", x=2.25, y=1.15, label="FBP SUVR = 1.1") +
+  geom_vline(xintercept=0.27,linetype = 2, color = 2) + annotate("text", x=0.55, y=2.5, label="TAU/Abeta42 = 0.27")
+
+plot1 + annotate("text", x = 2.375, y = 2.75, label = "FBP+/CSF+\nn = 866") +
+  annotate("text", x = 2.375, y = 0.7, label = "FBP-/CSF+\nn = 73") + 
+  annotate("text", x = 0.125, y = 2.75, label = "FBP+/CSF-\nn = 141") + 
+  annotate("text", x = 0.125, y = 0.7, label = "FBP-/CSF-\nn = 983")
+
 
 ## ROC
 library(plotROC)
@@ -1287,3 +1309,209 @@ for (i in seq(nrow(d)))
   d$GID[i] <- paste(d$GID[i],toString(sprintf("%02d",d$id2)[i]),sep = "")
 }
 
+##############################
+
+d <- read.csv("C://Users//wanya//Desktop//C2N//C2N_Plasma_AutopsyCohort.csv")
+d1 <- read.csv("C://Users//wanya//Desktop//C2N//results (1).csv")
+d$EXAMDATE <- ymd(d$EXAMDATE)
+d1$EXAMDATE <- dmy(d1$EXAMDATE)
+d1$GID <- unique(substr(d1$GID,1,nchar(d1$GID)-3))
+d2 <- merge(d,d1,by = c("RID","EXAMDATE"))
+
+t <- read.csv("C://Users//wanya//Desktop//C2N//location_100.csv")
+t$Storage.Unit <- substr(t$Storage.Unit,nchar(t$Storage.Unit)-1,nchar(t$Storage.Unit))
+t[t$Container == "BOX2",]$Container <- "BOX 2"
+t[t$Container == "BOX3",]$Container <- "BOX 3"
+t[t$Level == "6 X 6 SHELF  3 PLASMA",]$Level <- "6 X 6 SHELF 3 PLASMA"
+t[t$Level == "6X6 SHELF 4 PLASMA030816",]$Level <- "6 X 6 SHELF 4 PLASMA"
+t[t$Level == "6 X 6 SHELF  4 PLASMA",]$Level <- "6 X 6 SHELF 4 PLASMA"
+
+
+t$Sub.Level <- sapply(t$Sub.Level,function(i) strsplit(i," ")[[1]][5])
+t$Container <- sapply(t$Container,function(i) strsplit(i," ")[[1]][2])
+t$Level <- sapply(t$Level,function(i) strsplit(i," ")[[1]][5])
+
+##############################
+
+d <- read.csv("C://Users//wanya//Desktop//BC_NSC//1179_manifest_v1.csv")
+
+x <- d1
+
+t <- data.frame(table(d$RID))
+
+t <- read.csv("C://Users//wanya//Downloads//results (11).csv")
+
+d3 <- read.csv("C://Users//wanya//Desktop//BIOMK//DXSUM_PDXCONV_ADNIALL_12Oct2023.csv")[,c("Phase","RID","VISCODE","EXAMDATE","USERDATE","DXCURREN","DXCHANGE","DIAGNOSIS")]
+d3$DXCURREN[is.na(d3$DXCURREN)] = d3$DXCHANGE[is.na(d3$DXCURREN)]
+d3$DXCURREN[is.na(d3$DXCURREN)] = d3$DIAGNOSIS[is.na(d3$DXCURREN)]
+
+library(Epi) 
+d3$DX      = Relevel(factor(d3$DXCURREN), list(NL=c(1,7,9), MCI=c(2,4,8), AD=c(3,5,6), EMCI=0))
+d3$DODX    = d3$DATE
+d3$EXAMDATE <- ymd(d3$EXAMDATE)
+d3 <- d3[,c(2,4,9)]
+
+d2 <- d1
+
+d2$DX <- NA
+for(i in 1:nrow(d2))
+{
+  t <- d3[d3$RID == d2$RID[i],]
+  t <- t[!is.na(t$EXAMDATE),]
+  if(nrow(t)==0)
+  {
+    d2$DX[i] <- NA
+    next
+  }
+  t$diff <- abs(t$EXAMDATE - d2$EXAMDATE[i])
+  if(min(t$diff)>180)
+  {
+    d2$DX[i] <- NA
+    next
+  } else
+  {
+    d2$DX[i] <- as.character(t[t$diff == min(t$diff),]$DX[1])
+  }
+}
+
+
+
+d <- data.frame(read_excel("C://Users//wanya//Desktop//BC_NSC//1065_manifest.xlsx"))
+d1 <- read.csv("C://Users//wanya//Desktop//BC_NSC//results.csv")
+names(d1) <- c("RID","EXAMDATE","GID")
+
+d <- merge(d,d1,by = "GID")
+d2 <- data.frame(unique(d$RID),1:length(unique(d$RID)))
+names(d2) <- c("RID","id2")
+
+d3 <- merge(d,d2,by = "RID")
+
+##############################
+
+library(readxl)
+library(lubridate)
+library(ADNIMERGE)
+
+d <- data.frame(read_excel("C://Users//wanya//Desktop//Janssen//t.xlsx"))
+
+d$id <- 1:nrow(d)
+
+d[d$Sample.ID == "QCA",]$Sample.ID <- "FSQQCA"
+d[d$Sample.ID == "QCB",]$Sample.ID <- "FSQQCB"
+d[d$Sample.ID == "EQC1",]$Sample.ID <- "FSQEQC1"
+d[d$Sample.ID == "EQC2",]$Sample.ID <- "FSQEQC2"
+
+d$Sample.ID <- substr(d$Sample.ID,4,nchar(d$Sample.ID))
+
+d1 <- read.csv("C://Users//wanya//Downloads//results (12).csv")
+names(d)[2] <- "Sample_ID"
+names(d1)[1] <- "Sample_ID"
+names(d1)[2] <- "RID"
+names(d1)[3] <- "EXAMDATE"
+
+d <- merge(d,d1,by = "Sample_ID",all.x = TRUE)
+
+d$EXAMDATE <- dmy(d$EXAMDATE)
+
+d2 <- force(inventory)
+d2 <- d2[d2$EVENT == "Blood",]
+d2$EXAMDATE <- mdy(d2$EXAMDATE)
+d2 <- d2[,c(1,4,8)]
+
+d$VISCODE2 <- NA
+for (i in 1:nrow(d))
+{
+  t <- na.omit(d2[d2$RID==d$RID[i],])
+  if(nrow(t)==0)
+  {
+    d$VISCODE2[i] <- NA
+    next
+  }
+  t$diff <- abs(t$EXAMDATE - d$EXAMDATE[i])
+  if(min(t$diff)>90)
+  {
+    d$VISCODE2[i] <- NA
+    next
+  }
+  else
+  {
+    d$VISCODE2[i] <- t[t$diff==min(t$diff),]$VISCODE2[1]
+  }
+}
+
+##############################
+
+d1 <- read.csv("C://Users//wanya//Desktop//BIOMK//Roche Elecsys ADNI1_GO_2_3 CSF.csv")
+d1$EXAMDATE <- mdy(d1$EXAMDATE)
+
+d = read.csv("C://Users//wanya//Downloads//DXSUM_PDXCONV_ADNIALL_08Nov2023.csv")[,c("Phase","RID","VISCODE","EXAMDATE","USERDATE","DXCURREN","DXCHANGE","DIAGNOSIS")]   
+d$DXCURREN[is.na(d$DXCURREN)] = d$DXCHANGE[is.na(d$DXCURREN)]
+d$DXCURREN[is.na(d$DXCURREN)] = d$DIAGNOSIS[is.na(d$DXCURREN)]
+library(Epi)
+d$DX      = Relevel(factor(d$DXCURREN), list(NL=c(1,7,9), MCI=c(2,4,8), AD=c(3,5,6), EMCI=0))
+d$DODX    = d$DATE
+d <- d[,c(2,4,9)]
+d$EXAMDATE <- ymd(d$EXAMDATE)
+d$DX <- as.character(d$DX)
+
+d1$DX <- NA
+for (i in 1:nrow(d1))
+{
+  t <- na.omit(d[d$RID==d1$RID[i],])
+  if(nrow(t)==0)
+  {
+    d1$DX[i] <- NA
+    next
+  }
+  t$diff <- abs(t$EXAMDATE - d1$EXAMDATE[i])
+  if(min(t$diff)>180)
+  {
+    d1$DX[i] <- NA
+    next
+  }
+  else
+  {
+    d1$DX[i] <- t[t$diff==min(t$diff),]$DX[1]
+  }
+}
+
+##############################
+
+d <- read.csv("C://Users//wanya//Desktop//BC_NSC//1179_location_v3.csv")
+
+d$id2 <- d$id+5
+names(d)[1] <- "GID"
+d$GID <- substr(d$GID,1,nchar(d$GID)-2)
+
+for (i in seq(nrow(d)))
+{
+  d$GID[i] <- paste(d$GID[i],toString(sprintf("%02d",d$id2)[i]),sep = "")
+}
+
+##############################
+
+d <- read.csv("C://Users//wanya//Desktop//BC_NSC//1179_manifest_v2.csv")
+
+d$aliquot <- substr(d$GID,10,nchar(d$GID))
+d$aliquot <- as.integer(d$aliquot)
+d$a1 <- d$aliquot - 2
+
+d$GID <- substr(d$GID,1,nchar(d$GID)-2)
+for (i in seq(nrow(d)))
+{
+  d$GID[i] <- paste(d$GID[i],toString(sprintf("%02d",d$a1)[i]),sep = "")
+}
+write.csv(d,"C://Users//wanya//Desktop//BC_NSC//1179_manifest_v2_r.csv")
+
+
+##############################
+d <- read.csv("O://YW//1179_Manifest_Fuji.csv")
+d$aliquot <- substr(d$GID,10,nchar(d$GID))
+d$aliquot <- as.integer(d$aliquot)
+d$a1 <- d$aliquot + 1
+d$GID <- substr(d$GID,1,nchar(d$GID)-2)
+for (i in seq(nrow(d)))
+{
+  d$GID[i] <- paste(d$GID[i],toString(sprintf("%02d",d$a1)[i]),sep = "")
+}
+write.csv(d,"O://YW//1179_Manifest_Roche.csv")
