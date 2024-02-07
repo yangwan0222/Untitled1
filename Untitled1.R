@@ -1505,13 +1505,274 @@ write.csv(d,"C://Users//wanya//Desktop//BC_NSC//1179_manifest_v2_r.csv")
 
 
 ##############################
-d <- read.csv("O://YW//1179_Manifest_Fuji.csv")
+d <- read.csv("O://YW//1179_Manifest_Roche.csv")
 d$aliquot <- substr(d$GID,10,nchar(d$GID))
 d$aliquot <- as.integer(d$aliquot)
-d$a1 <- d$aliquot + 1
+d$a1 <- d$aliquot - 4
 d$GID <- substr(d$GID,1,nchar(d$GID)-2)
 for (i in seq(nrow(d)))
 {
   d$GID[i] <- paste(d$GID[i],toString(sprintf("%02d",d$a1)[i]),sep = "")
 }
-write.csv(d,"O://YW//1179_Manifest_Roche.csv")
+write.csv(d,"O://YW//1179_Manifest_C1.csv")
+
+##############################
+
+library(readxl)
+library(ADNIMERGE)
+library(lubridate)
+
+d <- data.frame(read_excel("C://Users//wanya//Desktop//unblind//Janssen//janssen.xlsx"))
+
+d1 <- read.csv("C://Users//wanya//Downloads//results (19).csv")
+names(d1) <- c("Sample_ID","RID","EXAMDATE")
+
+d <- merge(d,d1,by = "Sample_ID", all.x = TRUE)
+d$EXAMDATE <- dmy(d$EXAMDATE)
+d$RID <- as.integer(d$RID)
+
+d2 <- force(inventory)
+d2 <- d2[d2$EVENT == "Blood",]
+d2 <- d2[,c(1,4,8)]
+d2$EXAMDATE <- mdy(d2$EXAMDATE)
+
+d$VISCODE2 <- NA
+for(i in 1:nrow(d))
+{
+  t <- na.omit(d2[d2$RID == d$RID[i],])
+  if(nrow(t) == 0)
+  {
+    next
+  }
+  t$diff <- abs(t$EXAMDATE - d$EXAMDATE[i])
+  if(min(t$diff)>180)
+  {
+    next
+  } else
+  {
+    d$VISCODE2[i] <- t[t$diff == min(t$diff),]$VISCODE2[1]
+  }
+}
+
+##############################
+
+library(lubridate)
+d <- read.csv("C://Users//wanya//Desktop//AMPRION//AMP2//AMPRION_ASYN_SAA_LongitudinalTimePoints.csv")
+d$EXAMDATE <- mdy(d$EXAMDATE)
+
+d1 <- read.csv("C://Users//wanya//Downloads//results (20).csv")
+d1$Global.Specimen.ID <- substr(d1$Global.Specimen.ID,1,nchar(d1$Global.Specimen.ID)-3)
+d1 <- unique(d1)
+names(d1) <- c("GID","EXAMDATE","RID")
+d1$EXAMDATE <- dmy(d1$EXAMDATE)
+
+d <- merge(d,d1,by = c("RID","EXAMDATE"),all.x = TRUE)
+write.csv(d,"C://Users//wanya//Desktop//AMPRION//AMP2//AMPRION_ASYN_SAA_LongitudinalTimePoints_v1.csv")
+
+d$GID <- paste0(d$GID,"-05")
+d1 <- read.csv("C://Users//wanya//Downloads//results (21).csv")
+names(d1) <- c("GID","F","S","R","B","P")
+
+d <- merge(d,d1,by = "GID",all.x = TRUE)
+write.csv(d,"C://Users//wanya//Desktop//AMPRION//AMP2//AMPRION_ASYN_SAA_LongitudinalTimePoints_location.csv")
+
+##############################
+
+d <- read.csv("C://Users//wanya//Downloads//SHManifest (2).csv")
+d1 <- read.csv("C://Users//wanya//Desktop//AMPRION//AMP1//manifest_v1.csv")
+
+d <- read.csv("C://Users//wanya//Desktop//AMPRION//AMP2//AMPRION_ASYN_SAA_LongitudinalTimePoints_location.csv")
+
+d <- d[d$RID != "Shipped:",]
+d1 <- read.csv("O://YW//1179_Manifest_Roche.csv")
+
+##############################
+
+d <- read.csv("C://Users//wanya//Desktop//AMPRION//AMP2//AMPRION_ASYN_SAA_LongitudinalTimePoints_location.csv")
+
+d$GID <- substr(d$GID,1,nchar(d$GID)-2)
+for (i in seq(nrow(d)))
+{
+  d$GID[i] <- paste(d$GID[i],toString(sprintf("%02d",d$id)[i]),sep = "")
+}
+write.csv(d,"C://Users//wanya//Desktop//AMPRION//AMP2//AMPRION_ASYN_SAA_LongitudinalTimePoints_location.csv")
+
+##############################
+
+d <- read.csv("O://YW//1179_Manifest_C1.csv")
+d$a1 <- d$a1 - 1
+
+d$GID <- substr(d$GID,1,nchar(d$GID)-2)
+for (i in seq(nrow(d)))
+{
+  d$GID[i] <- paste(d$GID[i],toString(sprintf("%02d",d$a1)[i]),sep = "")
+}
+
+write.csv(d,"O://YW//1179_Manifest_C2.csv")
+
+##############################
+
+d <- data.frame(read_excel("O://YW//label.xlsx"))
+
+d$a1 <- substr(d$GID,nchar(d$GID)-1,nchar(d$GID))
+
+d$a1 <- as.integer(d$a1)
+d$a1 <- d$a1 + 1
+
+d$a2 <- d$a1 + 1
+
+d$GID <- substr(d$GID,1,nchar(d$GID)-2)
+for (i in seq(nrow(d)))
+{
+  d$GID2[i] <- paste(d$GID2[i],toString(sprintf("%02d",d$a2)[i]),sep = "")
+}
+
+##############################
+
+d <- data.frame(read_excel("C://Users//wanya//Desktop//C2N//C2N_manifest_100_ship.xlsx"))
+d1 <- read.csv("C://Users//wanya//Downloads//SHManifest (4).csv")
+
+##############################
+
+test <- function (x = c("a","b"))
+{
+  x <- match.arg(x,1)
+  print(x)
+}
+
+##############################
+library(lubridate)
+
+d <- read.csv("C://Users//wanya//Desktop//C2N//C2N_Plasma_AutopsyCohort.csv")
+d <- d[d$NP == "Available",]
+d$EXAMDATE <- ymd(d$EXAMDATE)
+
+d1 <- read.csv("C://Users//wanya//Downloads//results (22).csv")
+d1 <- unique(d1)
+d1$Collection.Date <- dmy(d1$Collection.Date)
+for (i in seq(nrow(d)))
+{
+  d$RID2[i] <- toString(sprintf("%04d",d$RID)[i])
+}
+
+names(d1)[1] <- "RID2"
+d2 <- merge(d,d1,by = "RID2",all.x = TRUE)
+
+d <- read.csv("C://Users//wanya//Downloads//temp.csv")
+d$EXAMDATE <- mdy(d$EXAMDATE)
+d$Collection.Date <- mdy(d$Collection.Date)
+d <- d[!d$EXAMDATE == d$Collection.Date,]
+
+x <- data.frame(table(d$RID))
+d$mark <- NA
+for(i in x$Var1)
+{
+  t <- d[d$RID == i,]
+  t$diff <- t$EXAMDATE - t$Collection.Date
+  t[t$diff == max(t$diff),]$mark <- "bl"
+  t[t$diff == min(t$diff),]$mark <- "last"
+  t1 <- rbind(t1,t)
+}
+
+
+d <- read.csv("C://Users//wanya//Downloads//results (23).csv")
+d1 <- data.frame(table(d$ID1))
+for(i in 2:nrow(d))
+{
+  if(d$ID1[i] == d$ID1[i-1])
+  {
+    d$Collection.Date[i] <- NA
+  }
+}
+d <- d[!is.na(d$Collection.Date),]
+
+##############################
+
+d <- read.csv("C://Users//wanya//Downloads//results (25).csv")
+d <- unique(d)
+d$type <- NA
+d[d$Primary == "BLD" & d$Additive == "NON",]$type <- "SER"
+d[d$Primary == "BLD" & d$Additive == "EDT",]$type <- "PLA"
+d[d$Primary == "CSF",]$type <- "CSF"
+
+d1 <- read.csv("C://Users//wanya//Downloads//DXSUM_PDXCONV_ADNIALL_02Feb2024.csv")[,c("Phase","RID","VISCODE","EXAMDATE","USERDATE","DXCURREN","DXCHANGE","DIAGNOSIS")]
+d1$DXCURREN[is.na(d1$DXCURREN)] = d1$DXCHANGE[is.na(d1$DXCURREN)]
+d1$DXCURREN[is.na(d1$DXCURREN)] = d1$DIAGNOSIS[is.na(d1$DXCURREN)]
+library(Epi) 
+d1$DX      = Relevel(factor(d1$DXCURREN), list(NL=c(1,7,9), MCI=c(2,4,8), AD=c(3,5,6), EMCI=0))
+d1$DODX    = d1$DATE
+
+library(dplyr)
+d2 <- d1 %>% group_by(RID) %>% filter(EXAMDATE == min(EXAMDATE, na.rm = TRUE))
+d1 <- d1[,c(2,9)]
+
+d <- merge(d,d1,by = "RID",all.x = TRUE)
+##############################
+
+d <- read.csv("C://Users//wanya//Downloads//2023 ship summary//Amprion//SHManifest3.csv")
+d <- merge(d,d2,by = "RID",all.x = TRUE)
+table(d$DX)
+
+##############################
+library(lubridate)
+
+d <- read.csv("C://Users//wanya//Downloads//results (27).csv")
+names(d)[1] <- "RID"
+names(d)[2] <- "EXAMDATE"
+d <- unique(d)
+d$EXAMDATE <- dmy(d$EXAMDATE)
+d <- d[!(d$Primary == "BLD" & d$Additive == "NON"),]
+
+db <- d[d$Primary == "BLD",]
+dc <- d[d$Primary == "CSF",]
+
+library(dplyr)
+d1 <- db %>% group_by(RID) %>% filter(EXAMDATE == min(EXAMDATE))
+d2 <- db %>% group_by(RID) %>% filter(EXAMDATE == max(EXAMDATE))
+d3 <- db %>% group_by(RID) %>% filter(EXAMDATE > min(EXAMDATE) & EXAMDATE < max(EXAMDATE))
+
+dt <- merge(d1,d2,by = "RID")
+dt$diff <- dt$EXAMDATE.y - dt$EXAMDATE.x
+names(dt)[2] <- "time1"
+names(dt)[5] <- "time2"
+
+d1 <- read.csv("C://Users//wanya//Downloads//ADNI_DOD_07Feb2024.csv")
+d1 <- d1[d1$VISCODE == "bl",][,c(1,9)]
+names(d1)[1] <- "RID"
+d1$EXAMDATE <- mdy(d1$EXAMDATE)
+d1 <- db %>% group_by(RID) %>% filter(EXAMDATE == min(EXAMDATE))
+
+dx <- merge(dt,d1,by = "RID",all.x = TRUE)
+dx$diff2 <- dx$time1 - dx$EXAMDATE
+
+dx <- read.csv("C://Users//wanya//Downloads//ADNI_DOD_07Feb2024.csv")
+
+temp <- function(i)
+{
+  if(i<200)
+  {
+    dx$ct <- "0~200"
+  } else if(i < 400)
+  {
+    dx$ct <- "200~400"
+  } else if(i < 600)
+  {
+    dx$ct <- "400~600"
+  } else if(i < 800)
+  {
+    dx$ct <- "600~800"
+  } else
+  {
+    dx$ct <- "Above 800"
+  }
+}
+
+dx$ct <- unlist(lapply(dx$Gap.day., temp))
+
+ggplot(dx, aes(x=Gap.day.)) + 
+  geom_histogram(aes(y=..density..), colour="black", fill="white")+
+  geom_density(alpha=.2, fill="#FF6666") +
+  scale_x_continuous(breaks = seq(0, 1000, by = 100))
+
+diamonds %>% group_by(cut) %>% summarise(mean = mean(price))
+tapply(diamonds$price, diamonds$cut, mean)
